@@ -16,18 +16,20 @@ fn read_line() -> String {
     io::stdin()
         .read_line(&mut buffer)
         .expect("failed to read line");
- 
+
     buffer
 }
 
-fn read<T : FromStr>() -> Result<T, T::Err>{
+fn read<T: FromStr>() -> Result<T, T::Err> {
     read_line().trim().parse::<T>()
 }
 
-fn read_vec<T : FromStr>() -> Result< Vec<T>, T::Err>{
-    read_line().split_whitespace().map(|x| x.parse::<T>()).collect()
+fn read_vec<T: FromStr>() -> Result<Vec<T>, T::Err> {
+    read_line()
+        .split_whitespace()
+        .map(|x| x.parse::<T>())
+        .collect()
 }
-
 
 #[macro_export]
 macro_rules! max {
@@ -102,23 +104,23 @@ impl Solver {
     fn solve(&mut self) {
         let N = read::<usize>().unwrap();
         let mut G = vec![vec![]; N];
-        for _ in 0..N-1 {
+        for _ in 0..N - 1 {
             let vec = read_vec::<usize>().unwrap();
             let a = vec[0];
             let b = vec[1];
             G[a].push(b);
             G[b].push(a);
         }
-        
+
         let mut visited = vec![false; N];
-        let mut is_chosen= vec![false; N];
+        let mut is_chosen = vec![false; N];
         visited[0] = true;
         dfs(0, &G, &mut visited, &mut is_chosen);
-       
+
         let mut ans = 0_usize;
         for c in is_chosen {
             if c {
-                ans +=1;
+                ans += 1;
             }
         }
         print!("{}", ans);
