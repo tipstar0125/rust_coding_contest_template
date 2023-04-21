@@ -7,27 +7,22 @@
 #![allow(clippy::neg_multiply)]
 #![allow(dead_code)]
 use std::collections::BTreeMap;
+use std::ops;
 
-use std::io;
-use std::str::FromStr;
+const MOD: usize = 1e9 as usize + 7;
+// const MOD: usize = 998244353;
+// const MOD: usize = 2147483647;
 
-fn read_line() -> String {
-    let mut buffer = String::new();
-    io::stdin()
-        .read_line(&mut buffer)
-        .expect("failed to read line");
-
-    buffer
+fn read<T: std::str::FromStr>() -> T {
+    let mut s = String::new();
+    std::io::stdin().read_line(&mut s).ok();
+    s.trim().parse().ok().unwrap()
 }
 
-fn read<T: FromStr>() -> Result<T, T::Err> {
-    read_line().trim().parse::<T>()
-}
-
-fn read_vec<T: FromStr>() -> Result<Vec<T>, T::Err> {
-    read_line()
+fn read_vec<T: std::str::FromStr>() -> Vec<T> {
+    read::<String>()
         .split_whitespace()
-        .map(|x| x.parse::<T>())
+        .map(|e| e.parse().ok().unwrap())
         .collect()
 }
 
@@ -45,15 +40,17 @@ macro_rules! min {
         std::cmp::min($x, min!($( $y ),+))
     }
 }
+
 #[derive(Debug, Clone)]
 struct UnionFind {
     parent: Vec<isize>,
     size: usize,
 }
+
 impl UnionFind {
     fn new(n: usize) -> Self {
         UnionFind {
-            parent: vec![-1; n + 1],
+            parent: vec![-1; n],
             size: n,
         }
     }
@@ -97,35 +94,152 @@ impl UnionFind {
     fn get_size(&self) -> usize {
         self.size
     }
+    fn roots(&self) -> Vec<usize> {
+        (0..self.parent.len())
+            .filter(|i| self.parent[*i] < 0)
+            .collect::<Vec<usize>>()
+    }
+    fn members(&mut self, x: usize) -> Vec<usize> {
+        let root = self.find(x);
+        (0..self.parent.len())
+            .filter(|i| self.find(*i) == root)
+            .collect::<Vec<usize>>()
+    }
+    fn all_group_members(&mut self) -> BTreeMap<usize, Vec<usize>> {
+        let mut groups_map: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
+        for x in 0..self.parent.len() {
+            let r = self.find(x);
+            groups_map.entry(r).or_default().push(x);
+        }
+        groups_map
+    }
 }
+
+type M = ModInt;
+#[derive(Debug, Clone, Copy)]
+struct ModInt {
+    value: usize,
+}
+
+impl ModInt {
+    fn new(n: usize) -> Self {
+        ModInt { value: n % MOD }
+    }
+    fn zero() -> Self {
+        ModInt { value: 0 }
+    }
+    fn one() -> Self {
+        ModInt { value: 1 }
+    }
+    fn value(&self) -> usize {
+        self.value
+    }
+    fn pow(&self, n: usize) -> Self {
+        let mut p = *self;
+        let mut ret = ModInt::one();
+        let mut nn = n;
+        while nn > 0 {
+            if nn & 1 == 1 {
+                ret *= p;
+            }
+            p *= p;
+            nn >>= 1;
+        }
+        ret
+    }
+    fn inv(&self) -> Self {
+        ModInt::new((ext_gcd(self.value, MOD).0 + MOD as isize) as usize)
+    }
+}
+
+impl ops::Add for ModInt {
+    type Output = ModInt;
+    fn add(self, other: Self) -> Self {
+        ModInt::new(self.value + other.value)
+    }
+}
+
+impl ops::Sub for ModInt {
+    type Output = ModInt;
+    fn sub(self, other: Self) -> Self {
+        ModInt::new(MOD + self.value - other.value)
+    }
+}
+
+impl ops::Mul for ModInt {
+    type Output = ModInt;
+    fn mul(self, other: Self) -> Self {
+        ModInt::new(self.value * other.value)
+    }
+}
+
+#[allow(clippy::suspicious_arithmetic_impl)]
+impl ops::Div for ModInt {
+    type Output = ModInt;
+    fn div(self, other: Self) -> Self {
+        self * other.inv()
+    }
+}
+
+impl ops::AddAssign for ModInt {
+    fn add_assign(&mut self, other: Self) {
+        *self = *self + other;
+    }
+}
+
+impl ops::SubAssign for ModInt {
+    fn sub_assign(&mut self, other: Self) {
+        *self = *self - other;
+    }
+}
+
+impl ops::MulAssign for ModInt {
+    fn mul_assign(&mut self, other: Self) {
+        *self = *self * other;
+    }
+}
+
+impl ops::DivAssign for ModInt {
+    fn div_assign(&mut self, other: Self) {
+        *self = *self / other;
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Comb {
+    fact: Vec<ModInt>,
+    fact_inverse: Vec<ModInt>,
+}
+
+impl Comb {
+    fn new(n: usize) -> Self {
+        let mut fact = vec![M::one(), M::one()];
+        let mut fact_inverse = vec![M::one(), M::one()];
+        let mut inverse = vec![M::zero(), M::one()];
+        for i in 2..=n {
+            fact.push(*fact.last().unwrap() * M::new(i));
+            inverse.push((M::zero() - inverse[MOD % i]) * M::new(MOD / i));
+            fact_inverse.push(*fact_inverse.last().unwrap() * *inverse.last().unwrap());
+        }
+        Comb { fact, fact_inverse }
+    }
+    fn nCr(&self, n: usize, r: usize) -> ModInt {
+        self.fact[n] * self.fact_inverse[n - r] * self.fact_inverse[r]
+    }
+    fn nHr(&self, n: usize, r: usize) -> ModInt {
+        self.nCr(n + r - 1, r)
+    }
+}
+
 #[derive(Default)]
 struct Solver {}
 impl Solver {
     fn solve(&mut self) {
-        let N = read::<usize>().unwrap();
-        let mut G = vec![vec![]; N];
-        for _ in 0..N - 1 {
-            let vec = read_vec::<usize>().unwrap();
-            let a = vec[0];
-            let b = vec[1];
-            G[a].push(b);
-            G[b].push(a);
-        }
-
-        let mut visited = vec![false; N];
-        let mut is_chosen = vec![false; N];
-        visited[0] = true;
-        dfs(0, &G, &mut visited, &mut is_chosen);
-
-        let mut ans = 0_usize;
-        for c in is_chosen {
-            if c {
-                ans += 1;
-            }
-        }
-        print!("{}", ans);
+        // let N: usize = read().unwrap();
+        // let v: Vec<isize> = read_vec();
     }
 }
+
 fn main() {
     std::thread::Builder::new()
         .stack_size(128 * 1024 * 1024)
@@ -133,18 +247,6 @@ fn main() {
         .unwrap()
         .join()
         .unwrap();
-}
-
-fn dfs(pos: usize, G: &Vec<Vec<usize>>, visited: &mut Vec<bool>, is_chosen: &mut Vec<bool>) {
-    let mut ok = true;
-    for &next in &G[pos] {
-        if !visited[next] {
-            visited[next] = true;
-            dfs(next, G, visited, is_chosen);
-            ok &= !is_chosen[next]
-        }
-    }
-    is_chosen[pos] = ok;
 }
 
 fn eratosthenes(n: usize) -> Vec<bool> {
@@ -165,7 +267,31 @@ fn eratosthenes(n: usize) -> Vec<bool> {
     is_prime_list
 }
 
-fn mod_pow(a: usize, b: usize, m: usize) -> usize {
+fn legendre(n: usize, p: usize) -> usize {
+    let mut cnt = 0_usize;
+    let mut pp = p;
+    while pp <= n {
+        cnt += n / pp;
+        pp *= p;
+    }
+    cnt
+}
+
+fn mod_pow(a: usize, b: usize) -> usize {
+    let mut p = a;
+    let mut ret = 1;
+    let mut n = b;
+    while n > 0 {
+        if n & 1 == 1 {
+            ret = ret * p % MOD;
+        }
+        p = p * p % MOD;
+        n >>= 1;
+    }
+    ret
+}
+
+fn mod_pow2(a: usize, b: usize, m: usize) -> usize {
     let mut p = a;
     let mut ret = 1;
     let mut n = b;
@@ -179,8 +305,8 @@ fn mod_pow(a: usize, b: usize, m: usize) -> usize {
     ret
 }
 
-fn mod_div(a: usize, b: usize, m: usize) -> usize {
-    (a * mod_pow(b, m - 2, m)) % m
+fn mod_inv(a: usize, b: usize) -> usize {
+    (a * mod_pow(b, MOD - 2)) % MOD
 }
 
 fn prime_factorize(n: usize) -> BTreeMap<usize, usize> {
@@ -214,4 +340,17 @@ fn enum_dividers(n: usize) -> Vec<usize> {
     }
     ret.sort();
     ret
+}
+
+// ax+by=gcd(a, b)
+fn ext_gcd(a: usize, b: usize) -> (isize, isize, usize) {
+    if a == 0 {
+        return (0, 1, b);
+    }
+    let (x, y, g) = ext_gcd(b % a, a);
+    (y - b as isize / a as isize * x, x, g)
+}
+
+fn mod_inv2(x: usize) -> usize {
+    (ext_gcd(x, MOD).0 + MOD as isize) as usize % MOD
 }
