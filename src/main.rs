@@ -235,8 +235,8 @@ impl Comb {
 struct Solver {}
 impl Solver {
     fn solve(&mut self) {
-        // let N: usize = read().unwrap();
-        // let v: Vec<isize> = read_vec();
+        // let N: usize = read();
+        // let v: Vec<usize> = read_vec();
     }
 }
 
