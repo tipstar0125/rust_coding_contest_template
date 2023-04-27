@@ -6,11 +6,11 @@
 #![allow(clippy::nonminimal_bool)]
 #![allow(clippy::neg_multiply)]
 #![allow(dead_code)]
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::ops;
 
-const MOD: usize = 1e9 as usize + 7;
-// const MOD: usize = 998244353;
+// const MOD: usize = 1e9 as usize + 7;
+const MOD: usize = 998244353;
 // const MOD: usize = 2147483647;
 
 fn read<T: std::str::FromStr>() -> T {
@@ -86,6 +86,94 @@ impl UnionFind {
     }
     fn is_root(&mut self, x: usize) -> bool {
         self.find(x) == x
+    }
+    fn get_union_size(&mut self, x: usize) -> usize {
+        let root = self.find(x);
+        -self.parent[root] as usize
+    }
+    fn get_size(&self) -> usize {
+        self.size
+    }
+    fn roots(&self) -> Vec<usize> {
+        (0..self.parent.len())
+            .filter(|i| self.parent[*i] < 0)
+            .collect::<Vec<usize>>()
+    }
+    fn members(&mut self, x: usize) -> Vec<usize> {
+        let root = self.find(x);
+        (0..self.parent.len())
+            .filter(|i| self.find(*i) == root)
+            .collect::<Vec<usize>>()
+    }
+    fn all_group_members(&mut self) -> BTreeMap<usize, Vec<usize>> {
+        let mut groups_map: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
+        for x in 0..self.parent.len() {
+            let r = self.find(x);
+            groups_map.entry(r).or_default().push(x);
+        }
+        groups_map
+    }
+}
+
+#[derive(Debug, Clone)]
+struct WeightedUnionFind {
+    parent: Vec<isize>,
+    size: usize,
+    diff_weight: Vec<isize>,
+}
+
+impl WeightedUnionFind {
+    fn new(n: usize) -> Self {
+        WeightedUnionFind {
+            parent: vec![-1; n],
+            size: n,
+            diff_weight: vec![0_isize; n],
+        }
+    }
+    fn find(&mut self, x: usize) -> usize {
+        if self.parent[x] < 0 {
+            return x;
+        }
+        let root = self.find(self.parent[x] as usize);
+        self.diff_weight[x] += self.diff_weight[self.parent[x] as usize];
+        self.parent[x] = root as isize;
+        root
+    }
+    fn weight(&mut self, x: usize) -> isize {
+        self.find(x);
+        self.diff_weight[x]
+    }
+    fn unite(&mut self, x: usize, y: usize, w: isize) -> Option<(usize, usize)> {
+        let root_x = self.find(x);
+        let root_y = self.find(y);
+        if root_x == root_y {
+            return None;
+        }
+
+        let adjusted_w = w + self.weight(x) - self.weight(y);
+        let size_x = -self.parent[root_x];
+        let size_y = -self.parent[root_y];
+        self.size -= 1;
+        if size_x >= size_y {
+            self.diff_weight[root_y] = adjusted_w;
+            self.parent[root_x] -= size_y;
+            self.parent[root_y] = root_x as isize;
+            Some((root_x, root_y))
+        } else {
+            self.diff_weight[root_x] = -adjusted_w;
+            self.parent[root_y] -= size_x;
+            self.parent[root_x] = root_y as isize;
+            Some((root_y, root_x))
+        }
+    }
+    fn is_same(&mut self, x: usize, y: usize) -> bool {
+        self.find(x) == self.find(y)
+    }
+    fn is_root(&mut self, x: usize) -> bool {
+        self.find(x) == x
+    }
+    fn diff(&mut self, x: usize, y: usize) -> isize {
+        self.weight(y) - self.weight(x)
     }
     fn get_union_size(&mut self, x: usize) -> usize {
         let root = self.find(x);
@@ -235,8 +323,79 @@ impl Comb {
 struct Solver {}
 impl Solver {
     fn solve(&mut self) {
-        // let N: usize = read();
-        // let v: Vec<usize> = read_vec();
+        let t: usize = read();
+        for _ in 0..t {
+            let n: usize = read();
+            let s: String = read();
+            let s: Vec<char> = s.chars().collect();
+            if n % 2 == 1 {
+                println!("-1");
+                continue;
+            }
+
+            let mut same = vec![0_usize; 26];
+            let mut same_cnt = 0_usize;
+            for i in 0..n / 2 {
+                let a = s[i];
+                let b = s[n - i - 1];
+                if a == b {
+                    let num = (a as u8 - b'a') as usize;
+                    same[num] += 1;
+                    same_cnt += 1;
+                }
+            }
+
+            if same_cnt == 0 {
+                println!("0");
+                continue;
+            }
+
+            let INF = 1_usize << 60;
+            let mut ans = INF;
+            for i in 0..26 {
+                if same[i] == 0 {
+                    continue;
+                }
+                let mut c = 0_usize;
+                let mut cnt = 0_usize;
+                let mut diff_cnt = 0_usize;
+                for j in 0..26 {
+                    if i != j && same[j] > 0 {
+                        if c == 0 {
+                            c = same[j];
+                        } else {
+                            let m = min!(c, same[j]);
+                            cnt += m;
+                            diff_cnt += m;
+                            c -= m;
+                        }
+                    }
+                }
+                if same[i] < c {
+                    continue;
+                }
+                for k in 0..n / 2 {
+                    let a = s[k];
+                    let b = s[n - k - 1];
+                    let c = (b'a' + i as u8) as char;
+                    if a != b && a != c && b != c {
+                        diff_cnt += 1;
+                    }
+                }
+                cnt += c;
+                c = same[i] - c;
+                if diff_cnt >= c {
+                    cnt += c;
+                    ans = min!(ans, cnt);
+                }
+            }
+
+            if ans == INF {
+                println!("-1");
+            } else {
+                println!("{}", ans);
+            }
+        }
     }
 }
 
