@@ -6,7 +6,8 @@
 #![allow(clippy::nonminimal_bool)]
 #![allow(clippy::neg_multiply)]
 #![allow(dead_code)]
-use std::collections::{BTreeMap, VecDeque};
+use std::cmp::Reverse;
+use std::collections::{BTreeMap, BinaryHeap, VecDeque};
 use std::ops;
 
 // const MOD: usize = 1e9 as usize + 7;
@@ -323,79 +324,8 @@ impl Comb {
 struct Solver {}
 impl Solver {
     fn solve(&mut self) {
-        let t: usize = read();
-        for _ in 0..t {
-            let n: usize = read();
-            let s: String = read();
-            let s: Vec<char> = s.chars().collect();
-            if n % 2 == 1 {
-                println!("-1");
-                continue;
-            }
-
-            let mut same = vec![0_usize; 26];
-            let mut same_cnt = 0_usize;
-            for i in 0..n / 2 {
-                let a = s[i];
-                let b = s[n - i - 1];
-                if a == b {
-                    let num = (a as u8 - b'a') as usize;
-                    same[num] += 1;
-                    same_cnt += 1;
-                }
-            }
-
-            if same_cnt == 0 {
-                println!("0");
-                continue;
-            }
-
-            let INF = 1_usize << 60;
-            let mut ans = INF;
-            for i in 0..26 {
-                if same[i] == 0 {
-                    continue;
-                }
-                let mut c = 0_usize;
-                let mut cnt = 0_usize;
-                let mut diff_cnt = 0_usize;
-                for j in 0..26 {
-                    if i != j && same[j] > 0 {
-                        if c == 0 {
-                            c = same[j];
-                        } else {
-                            let m = min!(c, same[j]);
-                            cnt += m;
-                            diff_cnt += m;
-                            c -= m;
-                        }
-                    }
-                }
-                if same[i] < c {
-                    continue;
-                }
-                for k in 0..n / 2 {
-                    let a = s[k];
-                    let b = s[n - k - 1];
-                    let c = (b'a' + i as u8) as char;
-                    if a != b && a != c && b != c {
-                        diff_cnt += 1;
-                    }
-                }
-                cnt += c;
-                c = same[i] - c;
-                if diff_cnt >= c {
-                    cnt += c;
-                    ans = min!(ans, cnt);
-                }
-            }
-
-            if ans == INF {
-                println!("-1");
-            } else {
-                println!("{}", ans);
-            }
-        }
+        // let T: usize = read();
+        // let S = read::<String>().chars().collect::<Vec<char>>();
     }
 }
 
@@ -512,4 +442,12 @@ fn ext_gcd(a: usize, b: usize) -> (isize, isize, usize) {
 
 fn mod_inv2(x: usize) -> usize {
     (ext_gcd(x, MOD).0 + MOD as isize) as usize % MOD
+}
+
+fn coordinate_compression<T: std::cmp::Ord + Copy>(v: Vec<T>) -> BTreeMap<T, usize> {
+    let mut vv = v;
+    vv.sort();
+    vv.dedup();
+    let ret = vv.iter().enumerate().map(|(i, &s)| (s, i)).collect();
+    ret
 }
