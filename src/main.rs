@@ -7,7 +7,7 @@
 #![allow(clippy::neg_multiply)]
 #![allow(dead_code)]
 use std::cmp::Reverse;
-use std::collections::{BTreeMap, BinaryHeap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
 use std::ops;
 
 // const MOD: usize = 1e9 as usize + 7;
@@ -205,7 +205,7 @@ impl WeightedUnionFind {
 }
 
 type M = ModInt;
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 struct ModInt {
     value: usize,
 }
@@ -450,4 +450,32 @@ fn coordinate_compression<T: std::cmp::Ord + Copy>(v: Vec<T>) -> BTreeMap<T, usi
     vv.dedup();
     let ret = vv.iter().enumerate().map(|(i, &s)| (s, i)).collect();
     ret
+}
+
+fn transpose_vec<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    assert!(!v.is_empty());
+    let N = v[0].len();
+    let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
+    (0..N)
+        .map(|_| {
+            iters
+                .iter_mut()
+                .map(|n| n.next().unwrap())
+                .collect::<Vec<T>>()
+        })
+        .collect()
+}
+
+fn transpose_vec_deque<T>(v: VecDeque<VecDeque<T>>) -> VecDeque<VecDeque<T>> {
+    assert!(!v.is_empty());
+    let N = v[0].len();
+    let mut iters: VecDeque<_> = v.into_iter().map(|n| n.into_iter()).collect();
+    (0..N)
+        .map(|_| {
+            iters
+                .iter_mut()
+                .map(|n| n.next().unwrap())
+                .collect::<VecDeque<T>>()
+        })
+        .collect()
 }
