@@ -8,10 +8,9 @@
 #![allow(dead_code)]
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
-use std::ops;
 
-// const MOD: usize = 1e9 as usize + 7;
-const MOD: usize = 998244353;
+const MOD: usize = 1e9 as usize + 7;
+// const MOD: usize = 998244353;
 // const MOD: usize = 2147483647;
 
 fn read<T: std::str::FromStr>() -> T {
@@ -241,21 +240,21 @@ impl ModInt {
     }
 }
 
-impl ops::Add for ModInt {
+impl std::ops::Add for ModInt {
     type Output = ModInt;
     fn add(self, other: Self) -> Self {
         ModInt::new(self.value + other.value)
     }
 }
 
-impl ops::Sub for ModInt {
+impl std::ops::Sub for ModInt {
     type Output = ModInt;
     fn sub(self, other: Self) -> Self {
         ModInt::new(MOD + self.value - other.value)
     }
 }
 
-impl ops::Mul for ModInt {
+impl std::ops::Mul for ModInt {
     type Output = ModInt;
     fn mul(self, other: Self) -> Self {
         ModInt::new(self.value * other.value)
@@ -263,32 +262,32 @@ impl ops::Mul for ModInt {
 }
 
 #[allow(clippy::suspicious_arithmetic_impl)]
-impl ops::Div for ModInt {
+impl std::ops::Div for ModInt {
     type Output = ModInt;
     fn div(self, other: Self) -> Self {
         self * other.inv()
     }
 }
 
-impl ops::AddAssign for ModInt {
+impl std::ops::AddAssign for ModInt {
     fn add_assign(&mut self, other: Self) {
         *self = *self + other;
     }
 }
 
-impl ops::SubAssign for ModInt {
+impl std::ops::SubAssign for ModInt {
     fn sub_assign(&mut self, other: Self) {
         *self = *self - other;
     }
 }
 
-impl ops::MulAssign for ModInt {
+impl std::ops::MulAssign for ModInt {
     fn mul_assign(&mut self, other: Self) {
         *self = *self * other;
     }
 }
 
-impl ops::DivAssign for ModInt {
+impl std::ops::DivAssign for ModInt {
     fn div_assign(&mut self, other: Self) {
         *self = *self / other;
     }
@@ -317,6 +316,21 @@ impl Comb {
     }
     fn nHr(&self, n: usize, r: usize) -> ModInt {
         self.nCr(n + r - 1, r)
+    }
+}
+
+trait ArgOrd<T> {
+    fn argmax(&self) -> Option<usize>;
+    fn argmin(&self) -> Option<usize>;
+}
+
+impl<T: Ord> ArgOrd<T> for [T] {
+    fn argmax(&self) -> Option<usize> {
+        (0..self.len()).max_by_key(|&i| &self[i])
+    }
+
+    fn argmin(&self) -> Option<usize> {
+        (0..self.len()).min_by_key(|&i| &self[i])
     }
 }
 
@@ -478,4 +492,15 @@ fn transpose_vec_deque<T>(v: VecDeque<VecDeque<T>>) -> VecDeque<VecDeque<T>> {
                 .collect::<VecDeque<T>>()
         })
         .collect()
+}
+
+fn run_length_encoding<T: Eq>(v: Vec<T>) -> Vec<(T, usize)> {
+    let mut v = v.into_iter().map(|v| (v, 1)).collect::<Vec<_>>();
+    v.dedup_by(|a, b| {
+        a.0 == b.0 && {
+            b.1 += a.1;
+            true
+        }
+    });
+    v
 }
