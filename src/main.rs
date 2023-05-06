@@ -9,8 +9,8 @@
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
 
-const MOD: usize = 1e9 as usize + 7;
-// const MOD: usize = 998244353;
+// const MOD: usize = 1e9 as usize + 7;
+const MOD: usize = 998244353;
 // const MOD: usize = 2147483647;
 
 fn read<T: std::str::FromStr>() -> T {
@@ -24,6 +24,47 @@ fn read_vec<T: std::str::FromStr>() -> Vec<T> {
         .split_whitespace()
         .map(|e| e.parse().ok().unwrap())
         .collect()
+}
+
+trait Bound<T> {
+    fn lower_bound(&self, x: &T) -> usize;
+    fn upper_bound(&self, x: &T) -> usize;
+}
+
+impl<T: PartialOrd> Bound<T> for [T] {
+    fn lower_bound(&self, x: &T) -> usize {
+        let (mut low, mut high) = (0, self.len());
+        while low + 1 < high {
+            let mid = (low + high) / 2;
+            if self[mid] < *x {
+                low = mid;
+            } else {
+                high = mid;
+            }
+        }
+        if self[low] < *x {
+            low + 1
+        } else {
+            low
+        }
+    }
+
+    fn upper_bound(&self, x: &T) -> usize {
+        let (mut low, mut high) = (0, self.len());
+        while low + 1 < high {
+            let mid = (low + high) / 2;
+            if self[mid] <= *x {
+                low = mid;
+            } else {
+                high = mid;
+            }
+        }
+        if self[low] <= *x {
+            low + 1
+        } else {
+            low
+        }
+    }
 }
 
 #[macro_export]
@@ -44,13 +85,19 @@ macro_rules! min {
 #[derive(Debug, Clone)]
 struct UnionFind {
     parent: Vec<isize>,
+    roots: BTreeSet<usize>,
     size: usize,
 }
 
 impl UnionFind {
     fn new(n: usize) -> Self {
+        let mut roots = BTreeSet::new();
+        for i in 0..n {
+            roots.insert(i);
+        }
         UnionFind {
             parent: vec![-1; n],
+            roots,
             size: n,
         }
     }
@@ -74,10 +121,12 @@ impl UnionFind {
         if size_x >= size_y {
             self.parent[root_x] -= size_y;
             self.parent[root_y] = root_x as isize;
+            self.roots.remove(&root_y);
             Some((root_x, root_y))
         } else {
             self.parent[root_y] -= size_x;
             self.parent[root_x] = root_y as isize;
+            self.roots.remove(&root_x);
             Some((root_y, root_x))
         }
     }
@@ -93,11 +142,6 @@ impl UnionFind {
     }
     fn get_size(&self) -> usize {
         self.size
-    }
-    fn roots(&self) -> Vec<usize> {
-        (0..self.parent.len())
-            .filter(|i| self.parent[*i] < 0)
-            .collect::<Vec<usize>>()
     }
     fn members(&mut self, x: usize) -> Vec<usize> {
         let root = self.find(x);
@@ -338,8 +382,9 @@ impl<T: Ord> ArgOrd<T> for [T] {
 struct Solver {}
 impl Solver {
     fn solve(&mut self) {
-        // let T: usize = read();
         // let S = read::<String>().chars().collect::<Vec<char>>();
+        let T: usize = read();
+        for _ in 0..T {}
     }
 }
 
