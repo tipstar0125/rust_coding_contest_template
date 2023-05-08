@@ -22,6 +22,8 @@ impl Solver {
         // for _ in 0..T {
         //     let N: usize = read();
         // }
+        let N: usize = read();
+        println!("{}", N);
     }
 }
 
