@@ -9,9 +9,30 @@
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
 
-// const MOD: usize = 1e9 as usize + 7;
-const MOD: usize = 998244353;
+const MOD: usize = 1e9 as usize + 7;
+// const MOD: usize = 998244353;
 // const MOD: usize = 2147483647;
+
+#[derive(Default)]
+struct Solver {}
+impl Solver {
+    fn solve(&mut self) {
+        // let S = read::<String>().chars().collect::<Vec<char>>();
+        // let T: usize = read();
+        // for _ in 0..T {
+        //     let N: usize = read();
+        // }
+    }
+}
+
+fn main() {
+    std::thread::Builder::new()
+        .stack_size(128 * 1024 * 1024)
+        .spawn(|| Solver::default().solve())
+        .unwrap()
+        .join()
+        .unwrap();
+}
 
 fn read<T: std::str::FromStr>() -> T {
     let mut s = String::new();
@@ -376,25 +397,6 @@ impl<T: Ord> ArgOrd<T> for [T] {
     fn argmin(&self) -> Option<usize> {
         (0..self.len()).min_by_key(|&i| &self[i])
     }
-}
-
-#[derive(Default)]
-struct Solver {}
-impl Solver {
-    fn solve(&mut self) {
-        // let S = read::<String>().chars().collect::<Vec<char>>();
-        let T: usize = read();
-        for _ in 0..T {}
-    }
-}
-
-fn main() {
-    std::thread::Builder::new()
-        .stack_size(128 * 1024 * 1024)
-        .spawn(|| Solver::default().solve())
-        .unwrap()
-        .join()
-        .unwrap();
 }
 
 fn eratosthenes(n: usize) -> Vec<bool> {
