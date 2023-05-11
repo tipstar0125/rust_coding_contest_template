@@ -6,9 +6,14 @@
 #![allow(clippy::nonminimal_bool)]
 #![allow(clippy::neg_multiply)]
 #![allow(dead_code)]
-// use itertools::Itertools;
+use itertools::Itertools;
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
+
+use proconio::{
+    fastout, input,
+    marker::{Chars, Usize1},
+};
 
 const MOD: usize = 1e9 as usize + 7;
 // const MOD: usize = 998244353;
@@ -17,10 +22,9 @@ const MOD: usize = 1e9 as usize + 7;
 #[derive(Default)]
 struct Solver {}
 impl Solver {
+    #[fastout]
     fn solve(&mut self) {
-        input! {
-            
-        }
+        input! {}
     }
 }
 
@@ -31,179 +35,6 @@ fn main() {
         .unwrap()
         .join()
         .unwrap();
-}
-
-#[macro_export]
-macro_rules! input {
-    () => {};
-    (mut $var:ident: $t:tt, $($rest:tt)*) => {
-        let mut $var = __input_inner!($t);
-        input!($($rest)*)
-    };
-    ($var:ident: $t:tt, $($rest:tt)*) => {
-        let $var = __input_inner!($t);
-        input!($($rest)*)
-    };
-    (mut $var:ident: $t:tt) => {
-        let mut $var = __input_inner!($t);
-    };
-    ($var:ident: $t:tt) => {
-        let $var = __input_inner!($t);
-    };
-}
-
-#[macro_export]
-macro_rules! __input_inner {
-    (($($t:tt),*)) => {
-        ($(__input_inner!($t)),*)
-    };
-    ([$t:tt; $n:expr]) => {
-        (0..$n).map(|_| __input_inner!($t)).collect::<Vec<_>>()
-    };
-    ([$t:tt]) => {{
-        let n = __input_inner!(usize);
-        (0..n).map(|_| __input_inner!($t)).collect::<Vec<_>>()
-    }};
-    (chars) => {
-        __input_inner!(String).chars().collect::<Vec<_>>()
-    };
-    (bytes) => {
-        __input_inner!(String).into_bytes()
-    };
-    (usize1) => {
-        __input_inner!(usize) - 1
-    };
-    ($t:ty) => {
-        $crate::read::<$t>()
-    };
-}
-
-#[macro_export]
-macro_rules! println {
-    () => {
-        $crate::write(|w| {
-            use std::io::Write;
-            std::writeln!(w).unwrap()
-        })
-    };
-    ($($arg:tt)*) => {
-        $crate::write(|w| {
-            use std::io::Write;
-            std::writeln!(w, $($arg)*).unwrap()
-        })
-    };
-}
-
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => {
-        $crate::write(|w| {
-            use std::io::Write;
-            std::write!(w, $($arg)*).unwrap()
-        })
-    };
-}
-
-#[macro_export]
-macro_rules! flush {
-    () => {
-        $crate::write(|w| {
-            use std::io::Write;
-            w.flush().unwrap()
-        })
-    };
-}
-
-pub fn read<T>() -> T
-where
-    T: std::str::FromStr,
-    T::Err: std::fmt::Debug,
-{
-    use std::cell::RefCell;
-    use std::io::*;
-
-    thread_local! {
-        pub static STDIN: RefCell<StdinLock<'static>> = RefCell::new(stdin().lock());
-    }
-
-    STDIN.with(|r| {
-        let mut r = r.borrow_mut();
-        let mut s = vec![];
-        loop {
-            let buf = r.fill_buf().unwrap();
-            if buf.is_empty() {
-                break;
-            }
-            if let Some(i) = buf.iter().position(u8::is_ascii_whitespace) {
-                s.extend_from_slice(&buf[..i]);
-                r.consume(i + 1);
-                if !s.is_empty() {
-                    break;
-                }
-            } else {
-                s.extend_from_slice(buf);
-                let n = buf.len();
-                r.consume(n);
-            }
-        }
-        std::str::from_utf8(&s).unwrap().parse().unwrap()
-    })
-}
-
-pub fn write<F>(f: F)
-where
-    F: FnOnce(&mut std::io::BufWriter<std::io::StdoutLock>),
-{
-    use std::cell::RefCell;
-    use std::io::*;
-
-    thread_local! {
-        pub static STDOUT: RefCell<BufWriter<StdoutLock<'static>>> =
-            RefCell::new(BufWriter::new(stdout().lock()));
-    }
-
-    STDOUT.with(|w| f(&mut w.borrow_mut()))
-}
-
-trait Bound<T> {
-    fn lower_bound(&self, x: &T) -> usize;
-    fn upper_bound(&self, x: &T) -> usize;
-}
-
-impl<T: PartialOrd> Bound<T> for [T] {
-    fn lower_bound(&self, x: &T) -> usize {
-        let (mut low, mut high) = (0, self.len());
-        while low + 1 < high {
-            let mid = (low + high) / 2;
-            if self[mid] < *x {
-                low = mid;
-            } else {
-                high = mid;
-            }
-        }
-        if self[low] < *x {
-            low + 1
-        } else {
-            low
-        }
-    }
-
-    fn upper_bound(&self, x: &T) -> usize {
-        let (mut low, mut high) = (0, self.len());
-        while low + 1 < high {
-            let mid = (low + high) / 2;
-            if self[mid] <= *x {
-                low = mid;
-            } else {
-                high = mid;
-            }
-        }
-        if self[low] <= *x {
-            low + 1
-        } else {
-            low
-        }
-    }
 }
 
 mod rnd {
@@ -267,19 +98,13 @@ macro_rules! min {
 #[derive(Debug, Clone)]
 struct UnionFind {
     parent: Vec<isize>,
-    roots: BTreeSet<usize>,
     size: usize,
 }
 
 impl UnionFind {
     fn new(n: usize) -> Self {
-        let mut roots = BTreeSet::new();
-        for i in 0..n {
-            roots.insert(i);
-        }
         UnionFind {
             parent: vec![-1; n],
-            roots,
             size: n,
         }
     }
@@ -303,12 +128,10 @@ impl UnionFind {
         if size_x >= size_y {
             self.parent[root_x] -= size_y;
             self.parent[root_y] = root_x as isize;
-            self.roots.remove(&root_y);
             Some((root_x, root_y))
         } else {
             self.parent[root_y] -= size_x;
             self.parent[root_x] = root_y as isize;
-            self.roots.remove(&root_x);
             Some((root_y, root_x))
         }
     }
@@ -324,6 +147,11 @@ impl UnionFind {
     }
     fn get_size(&self) -> usize {
         self.size
+    }
+    fn roots(&self) -> Vec<usize> {
+        (0..self.parent.len())
+            .filter(|i| self.parent[*i] < 0)
+            .collect::<Vec<usize>>()
     }
     fn members(&mut self, x: usize) -> Vec<usize> {
         let root = self.find(x);
@@ -548,6 +376,8 @@ impl Comb {
 trait ArgOrd<T> {
     fn argmax(&self) -> Option<usize>;
     fn argmin(&self) -> Option<usize>;
+    fn argsort(&self) -> Vec<usize>;
+    fn argsort_reverse(&self) -> Vec<usize>;
 }
 
 impl<T: Ord> ArgOrd<T> for [T] {
@@ -557,6 +387,14 @@ impl<T: Ord> ArgOrd<T> for [T] {
 
     fn argmin(&self) -> Option<usize> {
         (0..self.len()).min_by_key(|&i| &self[i])
+    }
+    fn argsort(&self) -> Vec<usize> {
+        (0..self.len()).sorted_by_key(|&i| &self[i]).collect_vec()
+    }
+    fn argsort_reverse(&self) -> Vec<usize> {
+        (0..self.len())
+            .sorted_by_key(|&i| std::cmp::Reverse(&self[i]))
+            .collect_vec()
     }
 }
 
@@ -676,9 +514,9 @@ fn coordinate_compression<T: std::cmp::Ord + Copy>(v: Vec<T>) -> BTreeMap<T, usi
 
 fn transpose_vec<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
     assert!(!v.is_empty());
-    let len = v[0].len();
+    let N = v[0].len();
     let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
-    (0..len)
+    (0..N)
         .map(|_| {
             iters
                 .iter_mut()
@@ -690,9 +528,9 @@ fn transpose_vec<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
 
 fn transpose_vec_deque<T>(v: VecDeque<VecDeque<T>>) -> VecDeque<VecDeque<T>> {
     assert!(!v.is_empty());
-    let len = v[0].len();
+    let N = v[0].len();
     let mut iters: VecDeque<_> = v.into_iter().map(|n| n.into_iter()).collect();
-    (0..len)
+    (0..N)
         .map(|_| {
             iters
                 .iter_mut()
