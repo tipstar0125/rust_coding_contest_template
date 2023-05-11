@@ -9,6 +9,9 @@
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
 
+use rand::rngs::StdRng;
+use rand::Rng;
+
 const MOD: usize = 1e9 as usize + 7;
 // const MOD: usize = 998244353;
 // const MOD: usize = 2147483647;
@@ -126,7 +129,7 @@ macro_rules! flush {
     };
 }
 
-fn read<T>() -> T
+pub fn read<T>() -> T
 where
     T: std::str::FromStr,
     T::Err: std::fmt::Debug,
@@ -215,6 +218,46 @@ impl<T: PartialOrd> Bound<T> for [T] {
         } else {
             low
         }
+    }
+}
+
+mod rnd {
+    use rand::Rng;
+    static mut S: usize = 0;
+    static MAX: usize = 1e9 as usize;
+
+    #[inline]
+    pub fn init(seed: usize) {
+        unsafe {
+            if seed == 0 {
+                S = rand::thread_rng().gen();
+            } else {
+                S = seed;
+            }
+        }
+    }
+    #[inline]
+    pub fn gen() -> usize {
+        unsafe {
+            if S == 0 {
+                init(0);
+            }
+            S ^= S << 7;
+            S ^= S >> 9;
+            S
+        }
+    }
+    #[inline]
+    pub fn gen_range(a: usize, b: usize) -> usize {
+        gen() % (b - a) + a
+    }
+    #[inline]
+    pub fn gen_bool() -> bool {
+        gen() & 1 == 1
+    }
+    #[inline]
+    pub fn gen_float() -> f64 {
+        ((gen() % MAX) as f64) / MAX as f64
     }
 }
 
